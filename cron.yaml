@@ -1,0 +1,4 @@
+cron:
+  - description: Poll RSS feeds
+    url: /tasks/poll
+    schedule: every 10 minutes
