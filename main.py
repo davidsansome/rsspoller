@@ -12,6 +12,8 @@ from google.appengine.ext import db
 FEED_URL  = "http://www.raspberrypi.org/feed"
 STORE_URL = "http://raspberrypi.com/"
 
+SCRIPT_RE = re.compile(r'<script.*?</script>')
+
 SENDER    = "RSS Poller <davidsansome@gmail.com>"
 RECEIVERS = [
   "me@davidsansome.com",
@@ -66,8 +68,9 @@ class PollHandler(webapp2.RequestHandler):
       logging.info("New entry ID '%s'" % entry.id)
 
       # Send the email and update datastore
-      self.SendEmail(entry.title, '<p><a href="%s">%s</a></p>%s' % (
-          entry.link, entry.link, entry.content[0].value))
+      html = '<p><a href="%s">%s</a></p>%s' % (
+          entry.link, entry.link, entry.content[0].value)
+      self.SendEmail(entry.title, html, html)
 
       FeedEntry(key_name=entry.id).put()
   
@@ -77,7 +80,7 @@ class PollHandler(webapp2.RequestHandler):
     if current.status_code != 200:
       raise FetchError("Got HTTP status %d" % current.status_code)
     
-    current_content = current.content
+    current_content = SCRIPT_RE.sub("", current.content)
 
     # Get the old store page
     try:
@@ -96,11 +99,7 @@ class PollHandler(webapp2.RequestHandler):
       old_content.splitlines(True),
       current_content.splitlines(True)))
     
-    html = difflib.HtmlDiff(2).make_table(
-      old_content.splitlines(True),
-      current_content.splitlines(True))
-    
-    self.SendEmail("Store page changed", unified, html)
+    self.SendEmail("Store page changed", unified)
 
     # Store the new content in datastore
     old_content_instance.content = current_content
@@ -108,18 +107,22 @@ class PollHandler(webapp2.RequestHandler):
   
   def SendEmail(self, subject, body, html_body=None):
     logging.info("Sending email with subject '%s'" % subject)
-
-    if html_body is None:
-      html_body = body
+    logging.info(body)
 
     for receiver in RECEIVERS:
       logging.info(" ... to '%s'" % receiver)
-      mail.send_mail(
-        sender=SENDER,
-        to=receiver,
-        subject=subject,
-        body=body,
-        html=html_body)
+
+      kwargs = {
+        "sender": SENDER,
+        "to": receiver,
+        "subject": subject,
+        "body": body,
+      }
+
+      if html_body is not None:
+        kwargs["html_body"] = html_body
+
+      mail.send_mail(**kwargs)
 
 
 app = webapp2.WSGIApplication([
