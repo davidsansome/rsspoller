@@ -12,7 +12,7 @@ from google.appengine.ext import db
 FEED_URL  = "http://www.raspberrypi.org/feed"
 STORE_URL = "http://raspberrypi.com/"
 
-SCRIPT_RE = re.compile(r'<script.*?</script>')
+SCRIPT_RE = re.compile(r'<script.*?</script>', re.DOTALL)
 
 SENDER    = "RSS Poller <davidsansome@gmail.com>"
 RECEIVERS = [
