@@ -120,7 +120,7 @@ class PollHandler(webapp2.RequestHandler):
       }
 
       if html_body is not None:
-        kwargs["html_body"] = html_body
+        kwargs["html"] = html_body
 
       mail.send_mail(**kwargs)
 
