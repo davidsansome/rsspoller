@@ -15,6 +15,7 @@ FEED_URL  = "http://www.raspberrypi.org/feed"
 STORE_URL = "http://raspberrypi.com/"
 
 SCRIPT_RE = re.compile(r'<script.*?</script>', re.DOTALL)
+SPACES_RE = re.compile(r'\s+')
 
 SENDER    = "RSS Poller <davidsansome@gmail.com>"
 RECEIVERS = [
@@ -93,6 +94,7 @@ class PollHandler(webapp2.RequestHandler):
       raise FetchError("Got HTTP status %d" % current.status_code)
     
     current_content = SCRIPT_RE.sub("", current.content)
+    current_content = SPACES_RE.sub(" ", current_content)
 
     # Get the old store page
     try:
