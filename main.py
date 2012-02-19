@@ -15,7 +15,7 @@ FEED_URL  = "http://www.raspberrypi.org/feed"
 STORE_URL = "http://raspberrypi.com/"
 
 SCRIPT_RE = re.compile(r'<script.*?</script>', re.DOTALL)
-SPACES_RE = re.compile(r'\s+')
+SPACES_RE = re.compile(r'\n(?:[ \t]*\n)+')
 
 SENDER    = "RSS Poller <davidsansome@gmail.com>"
 RECEIVERS = [
@@ -45,7 +45,7 @@ class PollHandler(webapp2.RequestHandler):
       self.FetchFeed()
     except google.appengine.api.urlfetch_errors.DeadlineExceededError:
       logging.warning("Timed out fetching feed")
-    except google.appengine.runtime.DeadlineExceededError):
+    except google.appengine.runtime.DeadlineExceededError:
       logging.warning("Application deadline exceeded fetching feed")
       return
     except Exception as ex:
@@ -56,7 +56,7 @@ class PollHandler(webapp2.RequestHandler):
       self.FetchStore()
     except google.appengine.api.urlfetch_errors.DeadlineExceededError:
       logging.warning("Timed out fetching store")
-    except google.appengine.runtime.DeadlineExceededError):
+    except google.appengine.runtime.DeadlineExceededError:
       logging.warning("Application deadline exceeded fetching store")
       return
     except Exception as ex:
@@ -94,7 +94,7 @@ class PollHandler(webapp2.RequestHandler):
       raise FetchError("Got HTTP status %d" % current.status_code)
     
     current_content = SCRIPT_RE.sub("", current.content)
-    current_content = SPACES_RE.sub(" ", current_content)
+    current_content = SPACES_RE.sub("\n", current_content)
 
     # Get the old store page
     try:
