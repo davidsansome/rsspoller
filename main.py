@@ -8,6 +8,8 @@ import webapp2
 from google.appengine.api import mail
 from google.appengine.api import urlfetch
 from google.appengine.ext import db
+import google.appengine.api.urlfetch_errors
+import google.appengine.runtime
 
 FEED_URL  = "http://www.raspberrypi.org/feed"
 STORE_URL = "http://raspberrypi.com/"
@@ -40,12 +42,22 @@ class PollHandler(webapp2.RequestHandler):
 
     try:
       self.FetchFeed()
+    except google.appengine.api.urlfetch_errors.DeadlineExceededError:
+      logging.warning("Timed out fetching feed")
+    except google.appengine.runtime.DeadlineExceededError):
+      logging.warning("Application deadline exceeded fetching feed")
+      return
     except Exception as ex:
       logging.exception("Error fetching feed")
       self.SendEmail("Error fetching feed", traceback.format_exc())
     
     try:
       self.FetchStore()
+    except google.appengine.api.urlfetch_errors.DeadlineExceededError:
+      logging.warning("Timed out fetching store")
+    except google.appengine.runtime.DeadlineExceededError):
+      logging.warning("Application deadline exceeded fetching store")
+      return
     except Exception as ex:
       logging.exception("Error fetching store")
       self.SendEmail("Error fetching store", traceback.format_exc())
